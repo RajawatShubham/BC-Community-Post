@@ -1,0 +1,12 @@
+# Ignore environment and secret files in exports
+.env export-ignore
+secrets.json export-ignore
+
+# Ignore test folders
+tests/ export-ignore
+
+# Ignore the entire .github folder including workflows, issue templates, etc.
+.github/ export-ignore
+
+# Ignore README in export (optional)
+README.md export-ignore
