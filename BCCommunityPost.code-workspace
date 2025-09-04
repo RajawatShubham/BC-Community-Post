@@ -1,7 +1,15 @@
 {
     "folders": [
         {
-            "path": "BCapi"
+            "path": "BCapi",
+			
+        },
+		{
+            "path": "ReportLayout",
+			
+        },
+        {
+            "path": "DotNet_in_AL"
         }
     ],
     "settings": {}
