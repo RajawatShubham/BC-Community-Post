@@ -79,7 +79,7 @@ function InitLoginForm() {
         //     showError('Invalid username or password');
         // }
 
-        if (username === '101' && password === '1980') {
+        if (username === JsonData.username && password === JsonData.password) {
             showSuccess(username,password);
         } else {
             showError('Invalid username or password');
@@ -104,8 +104,17 @@ function LoginSuccess(username,password)
     //  const terminalId = getParam('terminalId');
     const terminalId = GetQueryParam('terminalId');
 
+    const logindata = {
+        "event": "OnLogin",
+        "terminalId": terminalId,
+        "username": username,
+        "password": password
+    };
+
     // Notify BC from inside iframe: prefer parent.NAVBridge, fallback to postMessage
-    window.parent.NAVBridge.Invoke("OnLogin", [terminalId, username,password]);
+    JS2AL(logindata);
+
+    // window.parent.NAVBridge.Invoke("OnLogin", [terminalId, username,password]);
 
     // Send message to parent window (the add-in window that has NAVBridge)
     // window.parent.postMessage({
