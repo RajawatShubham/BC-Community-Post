@@ -51,10 +51,10 @@ function InitLoginForm() {
         elements.passwordInput.classList.add('error');
     }
 
-    function showSuccess() {
+    function showSuccess(username,password) {
         elements.loginButton.innerHTML = '<span class="loading"></span> Signing In...';
 
-        LoginSuccess();
+        LoginSuccess(username,password);
 
         setTimeout(() => {
             elements.loginButton.innerHTML = 'Success';
@@ -75,8 +75,12 @@ function InitLoginForm() {
             return;
         }
 
-        if (username === '10' && password === 'qwer') {
-            showSuccess();
+        // if (!showSuccess(username, password)) {
+        //     showError('Invalid username or password');
+        // }
+
+        if (username === '101' && password === '1980') {
+            showSuccess(username,password);
         } else {
             showError('Invalid username or password');
         }
@@ -87,27 +91,65 @@ function InitLoginForm() {
     elements.loginButton.onclick = handleLogin;
 
     console.log("Login form initialized.");
+
+    // Prevent escape to BC until success
+    PreventEscape();
 }
 
 
-function LoginSuccess() {
+function LoginSuccess(username,password)
+{
     // Handle login success actions here
 
-    // Microsoft.Dynamics.NAV.InvokeExtensibilityMethod("OnLogin", []);
-    // window.top.NAVBridge.Invoke("OnLogin", []);
+    //  const terminalId = getParam('terminalId');
+    const terminalId = GetQueryParam('terminalId');
 
-    window.parent.postMessage({ type: 'ToBC', method: 'OnLogin', args: [] }, '*');
+    // Notify BC from inside iframe: prefer parent.NAVBridge, fallback to postMessage
+    window.parent.NAVBridge.Invoke("OnLogin", [terminalId, username,password]);
 
+    // Send message to parent window (the add-in window that has NAVBridge)
+    // window.parent.postMessage({
+    //     type: 'ToBC',
+    //     method: 'OnLogin',
+    //     args: [terminalId, username, password]
+    // }, '*');
 
-    // // Notify BC from inside iframe: prefer parent.NAVBridge, fallback to postMessage
-    // try {
-    //     if (window.parent && window.parent.NAVBridge) {
-    //         window.parent.NAVBridge.invoke("OnLogin", []);
-    //     } else if (window.parent) {
-    //         window.parent.postMessage({ type: 'ToBC', method: 'OnLogin', args: [] }, '*');
-    //     }
-    // } catch (e) {
-    //     console.error('Failed to signal OnLogin to BC:', e);
-    // }
+    // alert('Unrendering POS iframe and cleaning up.');
+
 }
 
+// ============================================================================
+// STEP 3: Prevent user from escaping login screen
+// ============================================================================
+function PreventEscape() {
+    // Disable F5 / Ctrl+R reload
+    window.addEventListener('keydown', (e) => {
+        if ((e.key === 'F5') || (e.ctrlKey && e.key.toLowerCase() === 'r')) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        // Block Esc key closing fullscreen
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
+
+    // Disable right-click context menu
+    window.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+}
+
+// ============================================================================
+// STEP 4: Called after login validation
+// ============================================================================
+window.OnLoginSuccess = function () {
+    // Cleanup login overlay/iframe
+    Unrender();
+
+    // Allow BC shell again
+    restoreHostStyles();
+
+    // Remove escape restrictions
+    window.removeEventListener('keydown', PreventEscape, true);
+    window.removeEventListener('contextmenu', (e) => e.preventDefault(), true);
+};
